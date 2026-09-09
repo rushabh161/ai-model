@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module 1 — Diagnostic Assessment Console</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #131b2e;
+      --surface-accent: #1e293b;
+      --border: #233047;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 32px 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 780px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .header-box {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .header-box h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; }
+    .header-box p { margin: 0; color: var(--muted); font-size: 14px; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-primary { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+    .badge-cat { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .flex-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    select, button {
+      font: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+    select {
+      background: var(--bg);
+      color: var(--text);
+      flex: 1;
+      outline: none;
+    }
+    select:focus { border-color: var(--primary); }
+    button {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      border: 0;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    button:hover { background: var(--primary-hover); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Questions View */
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .question-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .question-text {
+      font-size: 15px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+    .options-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .option-tile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: var(--surface-accent);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s ease;
+    }
+    .option-tile:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.08);
+    }
+    .option-tile input[type="radio"] {
+      margin: 0;
+      accent-color: var(--primary);
+      transform: scale(1.1);
+    }
+    .option-tile.selected {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.15);
+    }
+
+    /* Results Telemetry */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    .score-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-accent);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .score-number {
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 6px 0;
+    }
+    .cat-scores-list {
+      display: grid;
+      gap: 10px;
+      align-content: center;
+    }
+    .cat-bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .cat-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .bar-track {
+      height: 7px;
+      background: var(--surface-accent);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--primary);
+    }
+
+    /* Feedback Cards */
+    .feedback-card {
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-accent);
+      font-size: 13px;
+    }
+    .feedback-card.correct { border-left: 4px solid var(--success); }
+    .feedback-card.incorrect { border-left: 4px solid var(--danger); }
+    .feedback-status {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .feedback-status .correct-tag { color: var(--success); }
+    .feedback-status .wrong-tag { color: var(--danger); }
+    .rationale {
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.4;
+      font-size: 12px;
+    }
+    .loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--muted);
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-box">
+      <span class="badge badge-primary">AI/ML Subsystem Sandbox</span>
+      <h1>Module 1: Diagnostic Assessment</h1>
+      <p>Generates targeted evaluation benchmarks and calculates genuine category scores.</p>
+    </div>
+
+    <!-- Track Selector Card -->
+    <div class="card flex-row">
+      <select id="track">
+        <option value="Data & AI">Data & AI (Python, SQL, ML, Stats)</option>
+        <option value="Backend Development">Backend (APIs, Databases, Git)</option>
+        <option value="Core CS & Systems">Systems (OS, Networks, Algorithms)</option>
+      </select>
+      <button id="btn-generate" onclick="generateAssessment()">Generate Evaluation</button>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="loader" style="display: none;">
+      <span>⚡ Contacting Groq Engine (llama-3.3-70b-versatile)...</span>
+    </div>
+
+    <!-- Assessment Form Container -->
+    <div id="quiz-wrapper" style="display: none;">
+      <div id="questions-list"></div>
+      <button id="btn-submit" style="width: 100%; padding: 14px; font-size: 15px;" onclick="gradeAssessment()">
+        Submit Test & Compute Mastery
+      </button>
+    </div>
+
+    <!-- Detailed Visual Results -->
+    <div id="results-wrapper" style="display: none;">
+      <div class="card">
+        <h3 style="margin: 0 0 16px;">Assessment Mastery Report</h3>
+        <div class="results-grid">
+          <div class="score-box">
+            <span style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Overall Score</span>
+            <div class="score-number" id="final-score">0%</div>
+            <span id="score-verdict" style="font-size: 12px; font-weight: 600;">Calibrated</span>
+          </div>
+
+          <div class="cat-scores-list" id="category-bars"></div>
+        </div>
+
+        <h4 style="margin: 20px 0 12px; border-top: 1px solid var(--border); padding-top: 16px;">
+          Question Explanations & Rationale
+        </h4>
+        <div id="feedback-list"></div>
+        
+        <button style="margin-top: 16px; background: var(--surface-accent); border: 1px solid var(--border);" onclick="resetTest()">
+          ← Retake with Another Track
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8001/api/assessment";
+    let activeQuestions = [];
+
+    async function generateAssessment() {
+      const track = document.getElementById("track").value;
+      const btn = document.getElementById("btn-generate");
+      const loader = document.getElementById("loader");
+      const quizWrapper = document.getElementById("quiz-wrapper");
+      const resultsWrapper = document.getElementById("results-wrapper");
+
+      btn.disabled = true;
+      loader.style.display = "flex";
+      quizWrapper.style.display = "none";
+      resultsWrapper.style.display = "none";
+
+      try {
+        const res = await fetch(`${API_BASE}/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ track: track, question_count: 5 })
+        });
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        
+        const data = await res.json();
+        activeQuestions = data.questions;
+
+        renderQuestions();
+        quizWrapper.style.display = "block";
+      } catch (err) {
+        alert("Failed to reach FastAPI backend: " + err.message);
+      } finally {
+        btn.disabled = false;
+        loader.style.display = "none";
+      }
+    }
+
+    function renderQuestions() {
+      const list = document.getElementById("questions-list");
+      list.innerHTML = activeQuestions.map((q, qIndex) => `
+        <div class="question-card" id="q-card-${q.id}">
+          <div class="question-head">
+            <span style="font-size: 12px; font-weight: 700; color: var(--muted);">QUESTION ${qIndex + 1} OF ${activeQuestions.length}</span>
+            <span class="badge badge-cat">${q.category}</span>
+          </div>
+          <div class="question-text">${escapeHtml(q.question)}</div>
+          <div class="options-grid">
+            ${q.options.map((opt, oIndex) => `
+              <label class="option-tile" id="tile-${q.id}-${oIndex}" onclick="selectTile('${q.id}', ${oIndex})">
+                <input type="radio" name="${q.id}" value="${oIndex}">
+                <span>${escapeHtml(opt)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectTile(qId, oIndex) {
+      document.querySelectorAll(`[id^="tile-${qId}-"]`).forEach(t => t.classList.remove('selected'));
+      const chosenTile = document.getElementById(`tile-${qId}-${oIndex}`);
+      if (chosenTile) {
+        chosenTile.classList.add('selected');
+        chosenTile.querySelector('input').checked = true;
+      }
+    }
+
+    async function gradeAssessment() {
+      const answers = {};
+      let unanswered = 0;
+
+      activeQuestions.forEach(q => {
+        const checked = document.querySelector(`input[name="${q.id}"]:checked`);
+        if (checked) {
+          answers[q.id] = parseInt(checked.value, 10);
+        } else {
+          unanswered++;
+        }
+      });
+
+      if (unanswered > 0 && !confirm(`You left ${unanswered} questions unanswered. Submit anyway?`)) {
+        return;
+      }
+
+      const btn = document.getElementById("btn-submit");
+      btn.disabled = true;
+      btn.textContent = "Grading...";
+
+      try {
+        const res = await fetch(`${API_BASE}/grade`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            track: document.getElementById("track").value,
+            questions: activeQuestions,
+            user_answers: answers
+          })
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const result = await res.json();
+        renderResults(result);
+      } catch (err) {
+        alert("Grading failed: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Submit Test & Compute Mastery";
+      }
+    }
+
+    function renderResults(data) {
+      document.getElementById("quiz-wrapper").style.display = "none";
+      const resultsWrapper = document.getElementById("results-wrapper");
+      resultsWrapper.style.display = "block";
+
+      // Overall Score
+      document.getElementById("final-score").textContent = `${data.total_score}%`;
+      const verdict = document.getElementById("score-verdict");
+      if (data.total_score >= 80) {
+        verdict.textContent = "Advanced Mastery";
+        verdict.style.color = "var(--success)";
+      } else if (data.total_score >= 50) {
+        verdict.textContent = "Intermediate Grounding";
+        verdict.style.color = "var(--warning)";
+      } else {
+        verdict.textContent = "Needs Targeted Practice";
+        verdict.style.color = "var(--danger)";
+      }
+
+      // Category Progress Bars
+      const catBars = document.getElementById("category-bars");
+      catBars.innerHTML = Object.entries(data.category_scores).map(([cat, score]) => `
+        <div class="cat-bar-item">
+          <div class="cat-info">
+            <span>${cat}</span>
+            <span>${score}%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: ${score}%; background: ${score >= 70 ? 'var(--success)' : score >= 40 ? 'var(--warning)' : 'var(--danger)'}"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // Step-by-Step Question Feedback
+      const feedbackList = document.getElementById("feedback-list");
+      feedbackList.innerHTML = data.detailed_feedback.map((item, idx) => {
+        const qObj = activeQuestions.find(q => q.id === item.question_id);
+        const userSelectedText = item.user_choice !== null && item.user_choice !== undefined 
+          ? qObj.options[item.user_choice] 
+          : "Not answered";
+        const correctText = qObj.options[item.correct_choice];
+
+        return `
+          <div class="feedback-card ${item.is_correct ? 'correct' : 'incorrect'}">
+            <div class="feedback-status">
+              <span>Q${idx + 1}: ${item.category}</span>
+              <span class="${item.is_correct ? 'correct-tag' : 'wrong-tag'}">
+                ${item.is_correct ? '✓ Correct' : '✗ Incorrect'}
+              </span>
+            </div>
+            <div><strong>Question:</strong> ${escapeHtml(qObj.question)}</div>
+            ${!item.is_correct ? `
+              <div style="margin: 4px 0; color: #fca5a5;"><strong>Your answer:</strong> ${escapeHtml(userSelectedText)}</div>
+              <div style="margin: 4px 0; color: #86efac;"><strong>Correct answer:</strong> ${escapeHtml(correctText)}</div>
+            ` : ''}
+            <div class="rationale"><strong>Rationale:</strong> ${escapeHtml(item.rationale)}</div>
+          </div>
+        `;
+      }).join('');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetTest() {
+      document.getElementById("results-wrapper").style.display = "none";
+      document.getElementById("quiz-wrapper").style.display = "none";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
