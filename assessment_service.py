@@ -1,7 +1,9 @@
 import os
 import json
+from pathlib import Path
 from typing import List, Dict, Any
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
@@ -10,7 +12,7 @@ from groq import Groq
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL_NAME = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+MODEL_NAME = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY must be set in .env")
@@ -27,6 +29,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- SERVE UI DIRECTLY AT ROOT ROUTE ---
+@app.get("/", response_class=HTMLResponse)
+def serve_ui():
+    html_path = Path(__file__).resolve().parent / "test_assessment.html"
+    if not html_path.exists():
+        return HTMLResponse(
+            content="<h3>test_assessment.html not found in the current directory.</h3>",
+            status_code=404,
+        )
+    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+
+
+# ==========================================
+# MODULE 1 ENDPOINTS
+# ==========================================
+
 class AssessmentGenerateRequest(BaseModel):
     track: str = Field(..., example="Data & AI")
     question_count: int = Field(default=5, ge=3, le=10)
@@ -42,7 +60,7 @@ class QuestionItem(BaseModel):
 class GradeSubmissionRequest(BaseModel):
     track: str
     questions: List[QuestionItem]
-    user_answers: Dict[str, int]  # question_id -> chosen index
+    user_answers: Dict[str, int]
 
 @app.post("/api/assessment/generate")
 def generate_assessment(payload: AssessmentGenerateRequest):
@@ -124,7 +142,3 @@ def grade_assessment(payload: GradeSubmissionRequest):
         "category_scores": category_scores,
         "detailed_feedback": detailed_feedback
     }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8001)
